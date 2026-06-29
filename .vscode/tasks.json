@@ -1,0 +1,43 @@
+{
+  // GUI(Dock/Spotlight)から起動した VSCode のタスクは、ログイン・非インタラクティブな
+  // zsh(/bin/zsh -l -c)で実行され .zshrc を読み込まない。nvm の初期化が .zshrc にあると
+  // npm が PATH に入らず "command not found" になるため、各タスクで nvm を明示的に
+  // source してから npm を呼ぶ。nvm が無い環境では存在チェックで自動スキップし、
+  // PATH 上の npm をそのまま使う。
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "compile",
+      "type": "shell",
+      "command": "export NVM_DIR=\"$HOME/.nvm\"; [ -s \"$NVM_DIR/nvm.sh\" ] && . \"$NVM_DIR/nvm.sh\"; npm run compile",
+      "options": {
+        "shell": {
+          "executable": "/bin/zsh",
+          "args": ["-l", "-c"]
+        }
+      },
+      "group": {
+        "kind": "build",
+        "isDefault": true
+      },
+      "problemMatcher": [],
+      "presentation": {
+        "reveal": "silent"
+      }
+    },
+    {
+      "label": "watch",
+      "type": "shell",
+      "command": "export NVM_DIR=\"$HOME/.nvm\"; [ -s \"$NVM_DIR/nvm.sh\" ] && . \"$NVM_DIR/nvm.sh\"; npm run watch",
+      "options": {
+        "shell": {
+          "executable": "/bin/zsh",
+          "args": ["-l", "-c"]
+        }
+      },
+      "group": "build",
+      "isBackground": true,
+      "problemMatcher": []
+    }
+  ]
+}

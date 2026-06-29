@@ -1,0 +1,146 @@
+{
+  "name": "claude-cost",
+  "displayName": "Claude コスト可視化",
+  "description": "Claude Code のサブスク使用状況・API換算コスト・追加使用（超過）課金をローカルデータから可視化する VSCode 拡張機能",
+  "version": "0.0.1",
+  "publisher": "local",
+  "private": true,
+  "license": "MIT",
+  "engines": {
+    "vscode": "^1.85.0"
+  },
+  "categories": [
+    "Visualization",
+    "Other"
+  ],
+  "main": "./dist/extension.js",
+  "activationEvents": [
+    "onStartupFinished"
+  ],
+  "contributes": {
+    "commands": [
+      {
+        "command": "claudeCost.openPanel",
+        "title": "使用状況を表示",
+        "category": "Claude Cost"
+      },
+      {
+        "command": "claudeCost.refresh",
+        "title": "再スキャン",
+        "category": "Claude Cost",
+        "icon": "$(refresh)"
+      }
+    ],
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "claudeCost",
+          "title": "Claude Cost",
+          "icon": "media/icon.svg"
+        }
+      ]
+    },
+    "views": {
+      "claudeCost": [
+        {
+          "id": "claudeCost.view",
+          "name": "使用状況",
+          "type": "tree"
+        }
+      ]
+    },
+    "menus": {
+      "view/title": [
+        {
+          "command": "claudeCost.refresh",
+          "when": "view == claudeCost.view",
+          "group": "navigation"
+        }
+      ]
+    },
+    "configuration": {
+      "title": "Claude Cost",
+      "properties": {
+        "claudeCost.claudeHome": {
+          "type": "string",
+          "default": "",
+          "markdownDescription": "Claude のデータディレクトリを上書きします。空の場合は `~/.claude` を使用します。"
+        },
+        "claudeCost.warnThresholdPercent": {
+          "type": "number",
+          "default": 80,
+          "minimum": 1,
+          "maximum": 99,
+          "description": "使用率が「接近」と判定される閾値（%）。CLI 実測の使用率に対して適用します（100% は「上限到達」扱い）。"
+        },
+        "claudeCost.useCliUsage": {
+          "type": "boolean",
+          "default": true,
+          "markdownDescription": "使用率% の取得に公式 CLI（`claude -p \"/usage\"`）を使用します。OAuth トークンには触れず、公式クライアントの出力のみを読み取ります。`claude` が見つからない場合は使用率% は表示されません。"
+        },
+        "claudeCost.claudeCliPath": {
+          "type": "string",
+          "default": "",
+          "markdownDescription": "`claude` 実行ファイルのパスを明示指定します。空の場合は PATH と代表的な設置場所から自動解決します。"
+        },
+        "claudeCost.usageRefreshIntervalSeconds": {
+          "type": "number",
+          "default": 300,
+          "minimum": 30,
+          "description": "使用率%（CLI 実測）の取得間隔（秒）。この間隔内はキャッシュを再利用します（手動の再スキャンは即時取得）。"
+        },
+        "claudeCost.priceOverrides": {
+          "type": "object",
+          "default": {},
+          "markdownDescription": "モデル別 API 価格の上書き。キーはモデル名（前方一致）、値は `{ inputPerMTok, outputPerMTok, cacheWrite5mMultiplier, cacheWrite1hMultiplier, cacheReadMultiplier }`。"
+        },
+        "claudeCost.unknownModelHandling": {
+          "type": "string",
+          "enum": [
+            "zero",
+            "exclude",
+            "warn"
+          ],
+          "default": "zero",
+          "markdownEnumDescriptions": [
+            "価格未定義モデルはコスト $0 として扱い、トークンのみ集計します。",
+            "価格未定義モデルを集計から完全に除外します。",
+            "価格未定義モデルをコスト $0 として扱い、UI に注記を表示します。"
+          ],
+          "description": "API 価格テーブルに無いモデル（ローカルモデル等）の扱い。"
+        },
+        "claudeCost.refreshDebounceMs": {
+          "type": "number",
+          "default": 2000,
+          "minimum": 200,
+          "description": "ファイル変更検知後、再集計するまでのデバウンス時間（ミリ秒）。"
+        },
+        "claudeCost.notifyOnOverage": {
+          "type": "boolean",
+          "default": true,
+          "description": "上限到達・超過を検知したときにポップアップ通知を表示します。"
+        },
+        "claudeCost.showRawModelNames": {
+          "type": "boolean",
+          "default": false,
+          "description": "ローカル/特殊モデル名を生の名前で表示します。無効時は汎用表記にまとめます。"
+        }
+      }
+    }
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run build",
+    "build": "node esbuild.js --production",
+    "compile": "node esbuild.js",
+    "watch": "node esbuild.js --watch",
+    "check-types": "tsc --noEmit",
+    "package": "vsce package --allow-missing-repository"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.0",
+    "@types/vscode": "^1.85.0",
+    "@vscode/vsce": "^3.2.0",
+    "esbuild": "^0.24.0",
+    "typescript": "^5.7.0"
+  }
+}

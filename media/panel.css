@@ -1,0 +1,193 @@
+:root {
+  --gap: 16px;
+  --radius: 8px;
+}
+
+body {
+  font-family: var(--vscode-font-family);
+  font-size: var(--vscode-font-size);
+  color: var(--vscode-foreground);
+  padding: 16px;
+  margin: 0;
+}
+
+h1 {
+  font-size: 1.3em;
+  margin: 0 0 4px;
+}
+
+.caveat {
+  color: var(--vscode-descriptionForeground);
+  font-size: 0.85em;
+  margin: 0 0 16px;
+}
+
+.loading {
+  color: var(--vscode-descriptionForeground);
+}
+
+.section {
+  margin-bottom: 24px;
+}
+
+.section-title {
+  font-size: 0.8em;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--vscode-descriptionForeground);
+  margin: 0 0 8px;
+}
+
+/* 状態バナー */
+.banner {
+  border-radius: var(--radius);
+  padding: 12px 16px;
+  margin-bottom: 24px;
+  border-left: 4px solid var(--vscode-descriptionForeground);
+  background: var(--vscode-editorWidget-background);
+}
+.banner.ok {
+  border-left-color: var(--vscode-charts-green, #4caf50);
+}
+.banner.approaching {
+  border-left-color: var(--vscode-charts-yellow, #ffb300);
+}
+.banner.over {
+  border-left-color: var(--vscode-charts-red, #f44336);
+}
+.banner-title {
+  font-weight: 600;
+  font-size: 1.05em;
+}
+.banner-sub {
+  color: var(--vscode-descriptionForeground);
+  font-size: 0.9em;
+  margin-top: 4px;
+}
+
+/* カード */
+.cards {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--gap);
+}
+.card {
+  flex: 1 1 130px;
+  min-width: 120px;
+  background: var(--vscode-editorWidget-background);
+  border: 1px solid var(--vscode-widget-border, transparent);
+  border-radius: var(--radius);
+  padding: 12px 14px;
+}
+.card .label {
+  font-size: 0.8em;
+  color: var(--vscode-descriptionForeground);
+}
+.card .value {
+  font-size: 1.5em;
+  font-weight: 600;
+  margin-top: 4px;
+}
+.card .sub {
+  font-size: 0.8em;
+  color: var(--vscode-descriptionForeground);
+  margin-top: 2px;
+}
+.card.highlight {
+  border-color: var(--vscode-charts-red, #f44336);
+}
+
+/* %バー */
+.bar-row {
+  margin-bottom: 14px;
+}
+.bar-head {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.9em;
+  margin-bottom: 4px;
+}
+/* %バーは SVG で描く（CSP のためインライン style を避ける）。幅は rect の
+   width 属性で表現し、色は CSS の fill で与える。 */
+.bar-svg {
+  display: block;
+  width: 100%;
+  height: 12px;
+}
+.bar-bg {
+  fill: var(--vscode-editorWidget-background);
+}
+.bar-fg {
+  fill: var(--vscode-charts-green, #4caf50);
+}
+.bar-fg.approaching {
+  fill: var(--vscode-charts-yellow, #ffb300);
+}
+.bar-fg.over {
+  fill: var(--vscode-charts-red, #f44336);
+}
+
+/* テーブル */
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9em;
+}
+th,
+td {
+  text-align: left;
+  padding: 6px 8px;
+  border-bottom: 1px solid var(--vscode-widget-border, rgba(128, 128, 128, 0.2));
+}
+td.num,
+th.num {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+.muted {
+  color: var(--vscode-descriptionForeground);
+}
+
+/* 日次グラフ */
+.chart {
+  width: 100%;
+  height: 140px;
+}
+.chart .bar {
+  fill: var(--vscode-charts-blue, #4a9eff);
+}
+
+/* CTA / ボタン */
+.cta {
+  background: var(--vscode-textBlockQuote-background);
+  border-radius: var(--radius);
+  padding: 12px 16px;
+  font-size: 0.9em;
+}
+.actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 16px;
+}
+button {
+  font-family: inherit;
+  font-size: 0.9em;
+  color: var(--vscode-button-foreground);
+  background: var(--vscode-button-background);
+  border: none;
+  padding: 6px 14px;
+  border-radius: 4px;
+  cursor: pointer;
+}
+button.secondary {
+  color: var(--vscode-button-secondaryForeground);
+  background: var(--vscode-button-secondaryBackground);
+}
+button:hover {
+  background: var(--vscode-button-hoverBackground);
+}
+.footer {
+  margin-top: 20px;
+  font-size: 0.8em;
+  color: var(--vscode-descriptionForeground);
+}
