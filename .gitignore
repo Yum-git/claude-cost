@@ -5,4 +5,4 @@ out/
 .DS_Store
 *.log
 .claude/
-docs/zenn/**
+docs/
