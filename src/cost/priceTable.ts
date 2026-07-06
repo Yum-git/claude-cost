@@ -41,6 +41,8 @@ function price(inputPerMTok: number, outputPerMTok: number): ModelPrice {
  * 確認元（claude-api スキル）:
  *   - Fable 5 / Mythos 5 = $10 / $50（公式表に記載）
  *   - Opus 4.8 / 4.7 / 4.6 = $5 / $25（公式表に記載）
+ *   - Sonnet 5 = $3 / $15（公式表に記載。2026-08-31 までの導入価格 $2 / $10 は
+ *     期限付きのため採用せず正規価格を使用。必要なら設定で上書き可）
  *   - Sonnet 4.6 = $3 / $15（公式表に記載）, Haiku 4.5 = $1 / $5（公式表に記載）
  *   - Opus 4.5 = $5 / $25, Sonnet 4.5 = $3 / $15（同一ティアの価格を適用。設定で上書き可）
  */
@@ -51,6 +53,7 @@ export const DEFAULT_PRICE_TABLE: Record<string, ModelPrice> = {
   "claude-opus-4-7": price(5, 25),
   "claude-opus-4-6": price(5, 25),
   "claude-opus-4-5": price(5, 25),
+  "claude-sonnet-5": price(3, 15),
   "claude-sonnet-4-6": price(3, 15),
   "claude-sonnet-4-5": price(3, 15),
   "claude-haiku-4-5": price(1, 5),
