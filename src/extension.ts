@@ -20,10 +20,22 @@ const OVERAGE_START_KEY = "claudeCost.overageStartTs";
 const CLI_USAGE_CACHE_KEY = "claudeCost.cliUsageShared";
 // 取得失敗時に直近の成功値を再利用してよい最大経過時間（stale 表示の上限）。
 const CLI_USAGE_STALE_MAX_MS = 30 * 60 * 1000;
+// 取得失敗が続くときの指数バックオフ状態を全ウィンドウで共有する globalState キー。
+const CLI_USAGE_BACKOFF_KEY = "claudeCost.cliUsageBackoff";
+// 指数バックオフの初期遅延（ミリ秒）。以降 2 倍ずつ増やし、上限は取得間隔(ttl)に連動。
+const BACKOFF_INITIAL_MS = 30 * 1000;
 
 interface SharedCliUsage {
   result: CliUsage;
   at: number;
+}
+
+/** 取得失敗時の指数バックオフ状態（全ウィンドウ共有）。 */
+interface BackoffState {
+  /** 連続失敗回数（1始まり。上限遅延に達したら据え置く）。 */
+  failCount: number;
+  /** 次に取得を試みてよい最早時刻（epoch ミリ秒）。 */
+  nextEarliestAt: number;
 }
 
 let output: vscode.OutputChannel;
@@ -162,11 +174,25 @@ async function showMenu(): Promise<void> {
 }
 
 /**
+ * 連続失敗回数から次回の指数バックオフ遅延（ミリ秒）を返す。
+ * failCount は今回の失敗を含む連続失敗回数（1始まり）。initialMs から 2 倍ずつ増やし maxMs で頭打ち。
+ */
+function nextBackoffDelayMs(
+  failCount: number,
+  initialMs: number,
+  maxMs: number
+): number {
+  return Math.min(initialMs * 2 ** (failCount - 1), maxMs);
+}
+
+/**
  * CLI 使用率を取得する。useCliUsage が false なら null。
  * 取得結果は globalState で全ウィンドウ共有し、設定TTL（既定5分）内は再取得しない
  * （複数ウィンドウを開いても /usage 実行を全体で集約し、claude 側スロットルを回避）。
  * forceProbe 時は TTL を無視する。取得に失敗した場合は、直近の成功値を一定時間
- * （CLI_USAGE_STALE_MAX_MS）だけ再利用し、表示の安定を図る。
+ * （CLI_USAGE_STALE_MAX_MS）だけ再利用し、表示の安定を図る。さらに失敗が続く間は
+ * 指数バックオフ（BACKOFF_INITIAL_MS 〜 ttl）で再取得を控え、claude への過剰アクセスを防ぐ。
+ * forceProbe 時はバックオフも無視して即取得し、成功でバックオフをリセットする。
  */
 async function getCliUsage(
   config: ReturnType<typeof readConfig>,
@@ -179,21 +205,48 @@ async function getCliUsage(
   const ttlMs = Math.max(30, config.usageRefreshIntervalSeconds) * 1000;
   const now = Date.now();
   const shared = globalState.get<SharedCliUsage>(CLI_USAGE_CACHE_KEY);
+  const backoff = globalState.get<BackoffState>(CLI_USAGE_BACKOFF_KEY);
+
+  // 直近の成功値が stale 上限内なら返す。無ければ null（表示は既存踏襲）。
+  const staleOrNull = (): CliUsage | null =>
+    shared && now - shared.at < CLI_USAGE_STALE_MAX_MS ? shared.result : null;
 
   // 全ウィンドウ共有の TTL キャッシュ。TTL 内なら叩かない（コール頻度を集約）。
   if (!forceProbe && shared && now - shared.at < ttlMs) {
     return shared.result;
   }
 
+  // 取得失敗が続く間は指数バックオフで再取得を控える（claude への過剰アクセス防止）。
+  // 手動更新（forceProbe）はユーザー明示操作なのでバックオフを無視して即取得する。
+  if (!forceProbe && backoff && now < backoff.nextEarliestAt) {
+    return staleOrNull();
+  }
+
+  // 取得失敗を記録し、次回の再取得可能時刻（指数バックオフ）を更新する。
+  // 戻り値は次回まで控える秒数（ログ表示用）。
+  const recordFailure = async (): Promise<number> => {
+    const prevFailCount = backoff?.failCount ?? 0;
+    // 既に上限遅延に達していたら failCount を据え置く（値の際限ない増大を防ぐ）。
+    const atMax =
+      prevFailCount > 0 &&
+      nextBackoffDelayMs(prevFailCount, BACKOFF_INITIAL_MS, ttlMs) >= ttlMs;
+    const failCount = atMax ? prevFailCount : prevFailCount + 1;
+    const delayMs = nextBackoffDelayMs(failCount, BACKOFF_INITIAL_MS, ttlMs);
+    // 起点は失敗確定時刻（probe 所要ぶんのズレを避けるため取り直す）。
+    await globalState.update(CLI_USAGE_BACKOFF_KEY, {
+      failCount,
+      nextEarliestAt: Date.now() + delayMs,
+    });
+    return Math.round(delayMs / 1000);
+  };
+
   const claudePath = resolveClaudePath(config.claudeCliPath);
   if (!claudePath) {
+    const sec = await recordFailure();
     output.appendLine(
-      "claude 実行ファイルが見つかりません。使用率% は取得できません（claudeCost.claudeCliPath で指定可）。"
+      `claude 実行ファイルが見つかりません。約 ${sec} 秒後に再確認します（claudeCost.claudeCliPath で指定可）。`
     );
-    // 直近の成功値があれば一定時間は表示を継続する（stale）。
-    return shared && now - shared.at < CLI_USAGE_STALE_MAX_MS
-      ? shared.result
-      : null;
+    return staleOrNull();
   }
 
   const result = await probeClaudeUsage({
@@ -203,19 +256,20 @@ async function getCliUsage(
   });
 
   if (result) {
-    // 取得成功 → 共有キャッシュを更新（全ウィンドウが参照する）。
+    // 取得成功 → 共有キャッシュを更新（全ウィンドウが参照する）。バックオフはリセット。
     await globalState.update(CLI_USAGE_CACHE_KEY, { result, at: now });
+    if (backoff) {
+      await globalState.update(CLI_USAGE_BACKOFF_KEY, undefined);
+    }
     return result;
   }
 
-  // 取得失敗（claude が使用率を返さない等）。直近の成功値を一定時間は再利用する。
-  if (shared && now - shared.at < CLI_USAGE_STALE_MAX_MS) {
-    output.appendLine(
-      "使用率を取得できませんでした。直近に取得できた値を表示します。"
-    );
-    return shared.result;
-  }
-  return null;
+  // 取得失敗（claude が使用率を返さない等）。指数バックオフを進め、直近の成功値を一定時間は再利用する。
+  const sec = await recordFailure();
+  output.appendLine(
+    `使用率を取得できませんでした。約 ${sec} 秒後に再試行します（直近値があれば表示を継続）。`
+  );
+  return staleOrNull();
 }
 
 interface RefreshOptions {

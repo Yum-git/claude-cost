@@ -2,7 +2,7 @@
   "name": "claude-cost",
   "displayName": "Claude コスト可視化",
   "description": "Claude Code のサブスク使用状況・API換算コスト・追加使用（超過）課金をローカルデータから可視化する VSCode 拡張機能",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "publisher": "local",
   "private": true,
   "license": "MIT",
