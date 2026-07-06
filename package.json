@@ -6,6 +6,10 @@
   "publisher": "local",
   "private": true,
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Yum-git/claude-cost.git"
+  },
   "engines": {
     "vscode": "^1.85.0"
   },
@@ -134,7 +138,7 @@
     "compile": "node esbuild.js",
     "watch": "node esbuild.js --watch",
     "check-types": "tsc --noEmit",
-    "package": "vsce package --allow-missing-repository"
+    "package": "vsce package"
   },
   "devDependencies": {
     "@types/node": "^22.10.0",

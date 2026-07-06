@@ -125,7 +125,7 @@ npm run package                         # claude-cost-x.x.x.vsix を生成
 code --install-extension claude-cost-0.0.1.vsix
 ```
 
-> `package.json` の `publisher` は暫定値（`local`）、`repository` フィールドは未設定です（git リポジトリ確定後に追加を推奨。現状はパッケージ時に `--allow-missing-repository` で省略しています）。ローカルインストールには支障ありませんが、Marketplace 等で配布・公開する場合は設定してください。
+> `package.json` の `publisher` は暫定値（`local`）です。`repository` フィールドは設定済みのため、`npm run package` 時に README 内の相対リンクは GitHub 上の URL へ自動解決されます。ローカルインストールには支障ありません。Marketplace 等で配布・公開する場合は `publisher` を正式な値に設定してください。
 
 ---
 
