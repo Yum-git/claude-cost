@@ -2,10 +2,14 @@
   "name": "claude-cost",
   "displayName": "Claude コスト可視化",
   "description": "Claude Code のサブスク使用状況・API換算コスト・追加使用（超過）課金をローカルデータから可視化する VSCode 拡張機能",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "publisher": "local",
   "private": true,
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Yum-git/claude-cost.git"
+  },
   "engines": {
     "vscode": "^1.85.0"
   },
@@ -134,7 +138,7 @@
     "compile": "node esbuild.js",
     "watch": "node esbuild.js --watch",
     "check-types": "tsc --noEmit",
-    "package": "vsce package --allow-missing-repository"
+    "package": "vsce package"
   },
   "devDependencies": {
     "@types/node": "^22.10.0",
