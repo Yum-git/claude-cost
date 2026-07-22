@@ -13,7 +13,11 @@ const RANK: Record<UsageLevel, number> = {
 export class Notifier {
   /** 初回走査で既存状態をベースライン化したか（起動時に過去状態で鳴らさない）。 */
   private initialized = false;
-  private prev = { fiveHour: "unavailable" as UsageLevel, weekly: "unavailable" as UsageLevel };
+  private prev = {
+    fiveHour: "unavailable" as UsageLevel,
+    weekly: "unavailable" as UsageLevel,
+    fableWeekly: "unavailable" as UsageLevel,
+  };
 
   /**
    * 使用率レベルが approaching / over へ「悪化（前回より深刻化）」したウィンドウがあれば通知する。
@@ -23,6 +27,7 @@ export class Notifier {
     const cur = {
       fiveHour: view.overage.fiveHour.level,
       weekly: view.overage.weekly.level,
+      fableWeekly: view.overage.fableWeekly.level,
     };
 
     if (!this.initialized) {
@@ -34,17 +39,14 @@ export class Notifier {
     const escalated = (
       label: string,
       prev: UsageLevel,
-      now: UsageLevel
+      now: UsageLevel,
+      pct: number | null
     ): string | null => {
       // 取得不能(unavailable)からの復帰は「悪化」ではないので通知しない（誤発火防止）。
       if (prev === "unavailable") {
         return null;
       }
       if ((now === "approaching" || now === "over") && RANK[now] > RANK[prev]) {
-        const pct =
-          label === "5時間"
-            ? view.overage.fiveHour.percent
-            : view.overage.weekly.percent;
         if (now === "over") {
           return `Claude Code: ${label}の使用率が上限（${pct ?? 100}%）に到達しました。追加使用課金: ${billingLabel(view)}`;
         }
@@ -54,13 +56,32 @@ export class Notifier {
     };
 
     const messages: string[] = [];
-    const m5 = escalated("5時間", this.prev.fiveHour, cur.fiveHour);
+    const m5 = escalated(
+      "5時間",
+      this.prev.fiveHour,
+      cur.fiveHour,
+      view.overage.fiveHour.percent
+    );
     if (m5) {
       messages.push(m5);
     }
-    const mw = escalated("週次", this.prev.weekly, cur.weekly);
+    const mw = escalated(
+      "週次",
+      this.prev.weekly,
+      cur.weekly,
+      view.overage.weekly.percent
+    );
     if (mw) {
       messages.push(mw);
+    }
+    const mf = escalated(
+      "週次（Fable）",
+      this.prev.fableWeekly,
+      cur.fableWeekly,
+      view.overage.fableWeekly.percent
+    );
+    if (mf) {
+      messages.push(mf);
     }
 
     this.prev = cur;

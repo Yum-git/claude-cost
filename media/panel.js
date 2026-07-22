@@ -170,8 +170,11 @@
       })
     );
 
-    // 状態バナー
-    const worst = worstLevel(o.fiveHour.level, o.weekly.level);
+    // 状態バナー（Fable 週次も深刻度判定に含める。行が無いプランでは unavailable で影響なし）
+    const worst = worstLevel(
+      worstLevel(o.fiveHour.level, o.weekly.level),
+      (o.fableWeekly && o.fableWeekly.level) || "unavailable"
+    );
     const banner = el("div", { class: "banner " + worst });
     banner.appendChild(
       el("div", { class: "banner-title", text: "状態: " + levelLabel(worst) })
@@ -210,6 +213,14 @@
           el("div", {
             class: "muted",
             text: "週次（Sonnet のみ）: " + o.sonnetWeeklyPercent + "%",
+          })
+        );
+      }
+      if (o.fableWeekly && o.fableWeekly.percent != null) {
+        usage.appendChild(
+          el("div", {
+            class: "muted",
+            text: "週次（Fable）: " + o.fableWeekly.percent + "%",
           })
         );
       }
