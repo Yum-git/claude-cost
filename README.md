@@ -60,7 +60,7 @@ Claude Code のサブスク使用状況を、特別なコマンドを打たず�
 claude-cost/
 ├── README.md              本ファイル
 ├── LICENSE                MIT ライセンス
-├── docs/                  技術ブログ原稿（claude-cost-techblog.md）
+├── docs/                  ローカル専用メモ（git 管理外・vsix にも含めない。技術ブログ原稿・開発メモ・リリース手順）
 ├── package.json           拡張マニフェスト（コマンド/ビュー/設定スキーマ）
 ├── tsconfig.json          TypeScript 型チェック設定（ビルドは esbuild が担当）
 ├── esbuild.js             バンドル設定
@@ -123,8 +123,8 @@ npm run watch      # ファイル変更を監視して自動ビルド
 ## インストール（vsix）
 
 ```bash
-npm run package                         # claude-cost-x.x.x.vsix を生成
-code --install-extension claude-cost-0.0.1.vsix
+npm run package                         # claude-cost-<version>.vsix を生成（<version> は package.json の version）
+code --install-extension claude-cost-<version>.vsix
 ```
 
 > `package.json` の `publisher` は暫定値（`local`）です。`repository` フィールドは設定済みのため、`npm run package` 時に README 内の相対リンクは GitHub 上の URL へ自動解決されます。ローカルインストールには支障ありません。Marketplace 等で配布・公開する場合は `publisher` を正式な値に設定してください。
