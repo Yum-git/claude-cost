@@ -14,10 +14,14 @@ export interface CliUsage {
   weeklyPercent: number | null;
   /** 週次（Sonnet only）の使用率%。 */
   sonnetWeeklyPercent: number | null;
+  /** 週次（Fable）の使用率%。Max / Team Premium プラン以外では /usage に行が無く null。 */
+  fableWeeklyPercent: number | null;
   /** 5時間ウィンドウのリセット時刻（人間可読テキスト）。 */
   fiveHourResetText: string | null;
   /** 週次のリセット時刻（人間可読テキスト）。 */
   weeklyResetText: string | null;
+  /** 週次（Fable）のリセット時刻（人間可読テキスト）。 */
+  fableWeeklyResetText: string | null;
 }
 
 /**
@@ -107,8 +111,11 @@ export function parseUsageOutput(text: string): CliUsage {
     fiveHourPercent: matchPercent(clean, "Current session:"),
     weeklyPercent: matchPercent(clean, "Current week (all models):"),
     sonnetWeeklyPercent: matchPercent(clean, "Current week (Sonnet only):"),
+    // Fable 行はプランによっては出力されない（ラベルは Sonnet と違い "only" 無し）。
+    fableWeeklyPercent: matchPercent(clean, "Current week (Fable):"),
     fiveHourResetText: matchReset(clean, "Current session:"),
     weeklyResetText: matchReset(clean, "Current week (all models):"),
+    fableWeeklyResetText: matchReset(clean, "Current week (Fable):"),
   };
 }
 

@@ -41,6 +41,8 @@ export interface ExtraUsageState {
 export interface OverageResult {
   fiveHour: WindowUsage;
   weekly: WindowUsage;
+  /** 週次（Fable）。/usage に Fable 行が無いプランでは unavailable。 */
+  fableWeekly: WindowUsage;
   /** 週次（Sonnet only）の使用率%。 */
   sonnetWeeklyPercent: number | null;
   extraUsage: ExtraUsageState;
@@ -158,9 +160,15 @@ export function buildOverageResult(params: {
     resetText: cli?.weeklyResetText ?? null,
     level: deriveLevel(cli?.weeklyPercent ?? null, params.warnThresholdPercent),
   };
+  const fableWeekly: WindowUsage = {
+    percent: cli?.fableWeeklyPercent ?? null,
+    resetText: cli?.fableWeeklyResetText ?? null,
+    level: deriveLevel(cli?.fableWeeklyPercent ?? null, params.warnThresholdPercent),
+  };
   return {
     fiveHour,
     weekly,
+    fableWeekly,
     sonnetWeeklyPercent: cli?.sonnetWeeklyPercent ?? null,
     extraUsage: buildExtraUsageState(params.status),
     overageStartTs: params.overageStartTs,

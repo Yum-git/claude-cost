@@ -56,7 +56,12 @@ export class StatusBar {
   update(view: UsageView): void {
     const fiveHour = view.overage.fiveHour;
     const weekly = view.overage.weekly;
-    const level = worstLevel(fiveHour.level, weekly.level);
+    const fableWeekly = view.overage.fableWeekly;
+    // Fable 行が無いプランでは unavailable（rank 最弱）なので判定結果は従来と変わらない。
+    const level = worstLevel(
+      worstLevel(fiveHour.level, weekly.level),
+      fableWeekly.level
+    );
 
     let icon = "$(graph)";
     let background: vscode.ThemeColor | undefined;
@@ -78,6 +83,9 @@ export class StatusBar {
       label = `5h ${fiveHour.percent}%`;
       if (weekly.percent !== null) {
         label += ` · 7d ${weekly.percent}%`;
+      }
+      if (fableWeekly.percent !== null) {
+        label += ` · Fable ${fableWeekly.percent}%`;
       }
     } else {
       label =
@@ -107,6 +115,10 @@ export class StatusBar {
     } else {
       md.appendMarkdown(windowLine("5時間", o.fiveHour));
       md.appendMarkdown(windowLine("週次", o.weekly));
+      // Fable 行が無いプランでは「取得不可」ノイズを出さないよう行ごと省略する。
+      if (o.fableWeekly.percent !== null) {
+        md.appendMarkdown(windowLine("週次（Fable）", o.fableWeekly));
+      }
     }
     md.appendMarkdown(`\nAPI換算コスト（もしAPIだったら）\n`);
     md.appendMarkdown(`- 5時間: ${usd(a.fiveHour.costUSD)}\n`);
