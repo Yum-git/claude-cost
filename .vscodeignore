@@ -1,5 +1,6 @@
 .vscode/**
 .claude/**
+docs/**
 src/**
 out/**
 node_modules/**

@@ -2,7 +2,7 @@
   "name": "claude-cost",
   "displayName": "Claude コスト可視化",
   "description": "Claude Code のサブスク使用状況・API換算コスト・追加使用（超過）課金をローカルデータから可視化する VSCode 拡張機能",
-  "version": "0.0.3",
+  "version": "0.1.0",
   "publisher": "local",
   "private": true,
   "license": "MIT",
@@ -96,7 +96,7 @@
         "claudeCost.priceOverrides": {
           "type": "object",
           "default": {},
-          "markdownDescription": "モデル別 API 価格の上書き。キーはモデル名（前方一致）、値は `{ inputPerMTok, outputPerMTok, cacheWrite5mMultiplier, cacheWrite1hMultiplier, cacheReadMultiplier }`。"
+          "markdownDescription": "モデル別 API 価格の上書き。キーはモデル名（前方一致）、値は `{ inputPerMTok, outputPerMTok, cacheWrite5mMultiplier, cacheWrite1hMultiplier, cacheReadMultiplier }`。入力・出力単価のいずれかを上書きしたモデルには、プロンプト長による段階料金（Claude Haiku 5.5 の 100,000 トークン超）を適用せず、プロンプト長によらず一律の単価を使います。"
         },
         "claudeCost.unknownModelHandling": {
           "type": "string",
